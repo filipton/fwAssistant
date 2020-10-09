@@ -46,7 +46,10 @@ namespace fwAssistant
                             KeyValuePair<List<string>, Command> cmd = Program.CommandRegistered(routine.RoutineCommand);
                             if (!cmd.Equals(default(KeyValuePair<List<string>, Command>)))
                             {
-                                Program.RunCommand(routine.RoutineCommand, cmd);
+                                new Thread(() =>
+                                {
+                                    Program.RunCommand(routine.RoutineCommand, cmd);
+                                }).Start();
                             }
                         }
                     }
