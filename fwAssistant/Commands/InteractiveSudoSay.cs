@@ -12,7 +12,7 @@ namespace fwAssistant.Commands
 		{
 			if (!_Interactivity)
 			{
-				TTSWT("Tak, co mam powiedzieć?");
+				TTS("Tak, co mam powiedzieć?");
 				RegisterInteractivity(kvCmd);
 			}
 			else if(_Interactivity && Text != string.Empty)
@@ -27,7 +27,7 @@ namespace fwAssistant.Commands
 			else if(_Interactivity && Text == string.Empty)
 			{
 				Text = cmd;
-				TTSWT("Czy napewno chcesz abym to powiedziala?");
+				TTS("Czy napewno chcesz abym to powiedziala?");
 				RegisterInteractivity(kvCmd);
 			}
 		}

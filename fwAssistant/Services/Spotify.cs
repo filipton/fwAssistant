@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using SpotifyAPI.Web;
 using Swan;
 using System;
 using System.IO;
@@ -9,6 +8,9 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Diagnostics.Contracts;
+using System.Threading;
+using fwAssistant.SpotifyApi;
 
 namespace fwAssistant
 {
@@ -20,8 +22,6 @@ namespace fwAssistant
 		public static string AcessToken;
 
 		public static string SpeakersSpotifyConnectId = "32b1144cf54c71990ad802f030874995db7bf45d";
-
-		public static SpotifyClient spotify;
 
 		public static void RunSpotifyService()
 		{
@@ -37,23 +37,9 @@ namespace fwAssistant
 					RefreshToken = sconfig[2];
 					AcessToken = sconfig[3];
 
-					again:
-					try
-					{
-						spotify = new SpotifyClient(AcessToken);
-					}
-					catch (Exception e)
-					{
-						if (e.Message.Contains("The access token expired"))
-						{
-							sRefreshToken();
-							goto again;
-						}
-						else
-						{
-							Console.WriteLine(e.GetType() + " : " + e.Message);
-						}
-					}
+					UserPlayback r = GetUserPlayback();
+					Console.WriteLine(r.IsPlaying);
+					SetVolume(100);
 				}
 				else
 				{
@@ -66,57 +52,81 @@ namespace fwAssistant
 			}
 		}
 
-		public static bool IsPlaying()
+		public static UserPlayback GetUserPlayback()
 		{
 			again:
-			try
+			using (var httpClient = new HttpClient())
 			{
-				var x = spotify.Player.GetCurrentPlayback().Result;
-				if (x != null) return x.IsPlaying;
-
-				return false;
-			}
-			catch (Exception e)
-			{
-				if (e.Message.Contains("The access token expired"))
+				using (var request = new HttpRequestMessage(new HttpMethod("GET"), "https://api.spotify.com/v1/me/player"))
 				{
-					sRefreshToken();
-					spotify = new SpotifyClient(AcessToken);
-					goto again;
-				}
-				else
-				{
-					Console.WriteLine(e.GetType() + " : " + e.Message);
+					request.Headers.TryAddWithoutValidation("Accept", "application/json");
+					request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {AcessToken}");
+
+					var response = httpClient.SendAsync(request);
+					string result = response.Result.Content.ReadAsStringAsync().Result;
+					UserPlayback userPlayback = JsonConvert.DeserializeObject<UserPlayback>(result);
+					Error error = JsonConvert.DeserializeObject<Error>(result);
+
+					if(error.ErrorError.Message == "The access token expired")
+					{
+						sRefreshToken();
+						goto again;
+					}
+
+					return userPlayback;
 				}
 			}
-
-			return false;
 		}
-
 		public static void TransferPlayback()
 		{
 			again:
-			try
+			using (var httpClient = new HttpClient())
 			{
-				spotify.Player.TransferPlayback(new PlayerTransferPlaybackRequest(new List<string> { SpeakersSpotifyConnectId }));
-				spotify.Player.ResumePlayback();
-			}
-			catch (Exception e)
-			{
-				if (e.Message.Contains("The access token expired"))
+				using (var request = new HttpRequestMessage(new HttpMethod("PUT"), "https://api.spotify.com/v1/me/player"))
 				{
-					sRefreshToken();
-					spotify = new SpotifyClient(AcessToken);
-					goto again;
-				}
-				else
-				{
-					Console.WriteLine(e.GetType() + " : " + e.Message);
+					request.Headers.TryAddWithoutValidation("Accept", "application/json");
+					request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {AcessToken}");
+
+					request.Content = new StringContent("{\"device_ids\":[\"" + "\"]}");
+					request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+					var response = httpClient.SendAsync(request);
+					string result = response.Result.Content.ReadAsStringAsync().Result;
+					Error error = JsonConvert.DeserializeObject<Error>(result);
+
+					if (error.ErrorError.Message == "The access token expired")
+					{
+						sRefreshToken();
+						goto again;
+					}
 				}
 			}
 		}
 
 		public static void SetVolume(int percent)
+		{
+			again:
+			using (var httpClient = new HttpClient())
+			{
+				using (var request = new HttpRequestMessage(new HttpMethod("PUT"), "https://api.spotify.com/v1/me/player/volume"))
+				{
+					request.Headers.TryAddWithoutValidation("Accept", "application/json");
+					request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {AcessToken}");
+
+					var response = httpClient.SendAsync(request);
+					string result = response.Result.Content.ReadAsStringAsync().Result;
+					Error error = JsonConvert.DeserializeObject<Error>(result);
+
+					if (error.ErrorError.Message == "The access token expired")
+					{
+						sRefreshToken();
+						goto again;
+					}
+				}
+			}
+		}
+
+		/*public static void SetVolume(int percent)
 		{
 			again:
 			try 
@@ -238,13 +248,13 @@ namespace fwAssistant
 			return null;
 		}
 
-		public static void PlaySong(string uri)
+		public static void PlaySong(string ctxuri)
 		{
 			again:
 			try
 			{
 				PlayerResumePlaybackRequest prpr = new PlayerResumePlaybackRequest();
-				prpr.ContextUri = uri;
+				prpr.ContextUri = ctxuri;
 
 				spotify.Player.ResumePlayback(prpr);
 			}
@@ -261,7 +271,7 @@ namespace fwAssistant
 					Console.WriteLine(e.GetType() + " : " + e.Message);
 				}
 			}
-		}
+		}*/
 
 
 		public static void sRefreshToken()

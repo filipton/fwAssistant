@@ -1,5 +1,4 @@
-﻿using fwAssistant.Structs;
-using Google.Cloud.TextToSpeech.V1;
+﻿using Google.Cloud.TextToSpeech.V1;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

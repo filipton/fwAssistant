@@ -13,39 +13,20 @@ using System.Text;
 using System.Web;
 using System.Runtime.CompilerServices;
 using System.Globalization;
-using fwAssistant.Structs;
 using Octokit;
 using Swan;
 using fwAssistant.Commands;
 
 namespace fwAssistant
 {
-    public abstract class Command
-	{
-        public abstract void Run(string cmd, KeyValuePair<List<string>, Command> kvCmd);
-
-        public void TTS(string msg, bool append = false, float volume = 1f, string lang = "pl-PL") => Program.TTS(msg, append, volume, lang);
-        public void TTSWT(string msg, bool append = false, float volume = 1f, string lang = "pl-PL") => Program.TTSWT(msg, append, volume, lang);
-
-        public bool _Interactivity => Program.Interactivity;
-        public void RegisterInteractivity(KeyValuePair<List<string>, Command> kvCmd)
-		{
-            Program.commandForInteractivity = kvCmd;
-            Program.Interactivity = true;
-            new WebClient().DownloadString("http://localhost:21378/start");
-        }
-        public void UnRegisterInteractivity()
-        {
-            Program.Interactivity = false;
-        }
-    }
-
 	class Program
 	{
 		public static TextToSpeechClient client;
         public static string Username = "Filip";
         public static bool speaking = false;
         public static Process ttsProcess;
+
+        public static bool MusicWasPlaying = false;
 
         public static bool Interactivity = false;
         public static KeyValuePair<List<string>, Command> commandForInteractivity;
@@ -54,9 +35,10 @@ namespace fwAssistant
         {
             [GetArgs("dzień dobry", "good morning")] = new GoodMorning(),
             [GetArgs("pogoda na")] = new Weather(),
-            [GetArgs("powiedz", "powtórz")] = new SudoSay(),
-            [GetArgs("czy możesz coś powiedzieć", "czy możesz coś dla mnie powiedzieć")] = new InteractiveSudoSay(),
-            [GetArgs("jak jest teraz na zewnątrz", "jak jest na zewnątrz")] = new ActualWeather()
+            [GetArgs("powiedz", "powtórz", "zjebany jesteś")] = new SudoSay(),
+            [GetArgs("czy możesz coś powiedzieć", "czy możesz coś dla mnie powiedzieć", "możesz coś powiedzieć")] = new InteractiveSudoSay(),
+            [GetArgs("jak jest teraz na zewnątrz", "jak jest na zewnątrz")] = new ActualWeather(),
+            [GetArgs("spotify")] = new SpotifySettings()
         };
 
 
@@ -84,6 +66,12 @@ namespace fwAssistant
             Console.WriteLine();
 
             cmdKey.Value.Run(cmd, cmdKey);
+
+            if (MusicWasPlaying && !Interactivity)
+            {
+                //Spotify.PausePlayback(false);
+                MusicWasPlaying = false;
+            }
 
             //int percent = int.Parse(cmd.ToLower().Replace("ustaw głośność spotify na ", "").Replace("%", ""));
             //Spotify.SetVolume(percent);
@@ -116,55 +104,6 @@ namespace fwAssistant
         }
 
         public static void TTS(string msg, bool append = false, float volume = 1f, string lang = "pl-PL")
-        {
-            if (speaking && append)
-            {
-                ttsProcess.Kill();
-                speaking = false;
-            }
-
-            if (speaking) return;
-            speaking = true;
-
-            Console.WriteLine($"==========================RESPONSE==========================");
-            Console.WriteLine($"{msg}");
-            Console.WriteLine($"=======================END OF RESPONSE======================");
-            Console.WriteLine();
-
-            new Thread(() =>
-            {
-                var input = new SynthesisInput
-                {
-                    Text = msg
-                };
-
-                var voiceSelection = new VoiceSelectionParams
-                {
-                    LanguageCode = lang,
-                    SsmlGender = SsmlVoiceGender.Female
-                };
-
-                var audioConfig = new AudioConfig
-                {
-                    AudioEncoding = AudioEncoding.Mp3
-                };
-
-                var response = client.SynthesizeSpeech(input, voiceSelection, audioConfig);
-
-                byte[] r = new byte[response.AudioContent.Length];
-                response.AudioContent.CopyTo(r, 0);
-
-                using (var output = File.Create("out.mp3"))
-                {
-                    output.Write(r, 0, r.Length);
-                }
-
-                ExecuteMpg("out.mp3", volume);
-                speaking = false;
-            }).Start();
-        }
-
-        public static void TTSWT(string msg, bool append = false, float volume = 1f, string lang = "pl-PL")
         {
             if (speaking && append)
             {

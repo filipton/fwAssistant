@@ -8,7 +8,7 @@ namespace fwAssistant.Commands
 	{
 		public override void Run(string cmd, KeyValuePair<List<string>, Command> kvCmd)
 		{
-			string msg = cmd.Remove(0, 8);
+			string msg = ReplaceCmdPrefix(cmd, kvCmd.Key);
 			TTS(msg, true);
 		}
 	}

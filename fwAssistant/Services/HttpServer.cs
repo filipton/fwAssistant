@@ -75,13 +75,14 @@ namespace fwAssistant
                             Program.speaking = false;
                             if(Program.ttsProcess != null) Program.ttsProcess.Kill();
                         }
-                        new Thread(() =>
+                        /*new Thread(() =>
                         {
                             if (Spotify.IsPlaying())
                             {
+                                Program.MusicWasPlaying = true;
                                 Spotify.PausePlayback(true);
                             }
-                        }).Start();
+                        }).Start();*/
                     }
 				}
 
