@@ -1,4 +1,5 @@
-﻿using System;
+﻿using fwAssistant.SpotifyApi;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -75,14 +76,16 @@ namespace fwAssistant
                             Program.speaking = false;
                             if(Program.ttsProcess != null) Program.ttsProcess.Kill();
                         }
-                        /*new Thread(() =>
+                        new Thread(() =>
                         {
-                            if (Spotify.IsPlaying())
+                            UserPlayback userPlayback = Spotify.GetUserPlayback();
+
+                            if (userPlayback.IsPlaying)
                             {
                                 Program.MusicWasPlaying = true;
-                                Spotify.PausePlayback(true);
+                                Spotify.PausePlayerPlayback();
                             }
-                        }).Start();*/
+                        }).Start();
                     }
 				}
 

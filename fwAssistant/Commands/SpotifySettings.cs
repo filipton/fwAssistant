@@ -1,4 +1,5 @@
-﻿using Swan;
+﻿using fwAssistant.SpotifyApi;
+using Swan;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,37 +15,42 @@ namespace fwAssistant.Commands
 			string command = ReplaceCmdPrefix(cmd, kvCmd.Key).ToLower();
 			string[] args = command.Split(" ");
 
-			/*switch (command)
+			switch (command)
 			{
 				case "następna piosenka":
-					Spotify.SkipSong();
+					Spotify.NextSong();
 					break;
 				case "poprzednia piosenka":
-					Spotify.PrevoiusSong();
+					Spotify.PreviousSong();
 					break;
 				case "jaka to piosenka":
 				case "co to za piosenka":
 				case "co jest aktualnie grane":
-					var song = Spotify.GetActualPlayingSong();
-					string retMessage = $"Aktualnie jest grane {song["Name"]} od {song["Artists"][0]["Name"]}!";
+					UserPlayback userPlayback = Spotify.GetUserPlayback();
+					string retMessage = $"Aktualnie jest grane {userPlayback.item.Name} od {userPlayback.item.Artists[0].Name}!";
 					TTS(retMessage);
 					break;
 				case "pokaż wszystkie playlisty":
 				case "wszystkie playlisty":
 					string playlists = string.Empty;
-					var pl = Spotify.spotify.Playlists.CurrentUsers().Result.Items;
-					for(int i = 0; i < pl.Count; i++)
+					var pl = Spotify.GetPlaylists().Items;
+					for(int i = 0; i < pl.Length; i++)
 					{
-						playlists += $"{i+1}: {pl[i].Name}...";
+						playlists += $"{i+1}: {pl[i].Name}... ";
 					}
 
 					TTS($"Twoje playlisty to: {playlists}");
 					break;
-				case "wznów odtwarzanie":
-					Spotify.PausePlayback(false);
+				case "zapauzuj odtwarzanie":
+					Program.MusicWasPlaying = false;
+					Spotify.PausePlayerPlayback();
 					break;
 				case "przenieś odtwarzanie na głośniki":
-					Spotify.BetterTransferPlayback();
+				case "przynieś odtwarzanie na":
+				case "odtwarzanie na głośniki":
+					Spotify.ResumePlayerPlayback();
+					Spotify.TransferPlayback();
+					Program.MusicWasPlaying = false;
 					break;
 				default:
 					if(command.StartsWith("ustaw głośność na "))
@@ -56,14 +62,14 @@ namespace fwAssistant.Commands
 					{
 						Spotify.TransferPlayback();
 
-						var pls = Spotify.spotify.Playlists.CurrentUsers().Result.Items;
+						var pls = Spotify.GetPlaylists().Items;
 
 						if (int.TryParse(args[args.Length - 1], out int pn))
 						{
-							if (pn >= 1 && pn <= pls.Count)
+							if (pn >= 1 && pn <= pls.Length)
 							{
 								Console.WriteLine(pls[pn - 1].Uri);
-								Spotify.PlaySong(pls[pn - 1].Uri);
+								Spotify.ResumePlayerPlayback(ctxUri: pls[pn - 1].Uri);
 							}
 						}
 						else
@@ -75,13 +81,13 @@ namespace fwAssistant.Commands
 								if (playlist.Name.ToLower() == pname)
 								{
 									Console.WriteLine(playlist.Uri);
-									Spotify.PlaySong(playlist.Uri);
+									Spotify.ResumePlayerPlayback(ctxUri: playlist.Uri);
 								}
 							}
 						}
 					}
 					break;
-			}*/
+			}
 		}
 	}
 }

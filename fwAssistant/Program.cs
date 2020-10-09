@@ -63,19 +63,15 @@ namespace fwAssistant
             Console.WriteLine($"==========================TREQUEST==========================");
             Console.WriteLine($"{cmd}");
             Console.WriteLine($"=======================END OF REQUEST=======================");
-            Console.WriteLine();
+			Console.WriteLine();
 
             cmdKey.Value.Run(cmd, cmdKey);
 
             if (MusicWasPlaying && !Interactivity)
             {
-                //Spotify.PausePlayback(false);
+                Spotify.ResumePlayerPlayback();
                 MusicWasPlaying = false;
             }
-
-            //int percent = int.Parse(cmd.ToLower().Replace("ustaw głośność spotify na ", "").Replace("%", ""));
-            //Spotify.SetVolume(percent);
-            //Spotify.PausePlayback(false);
 
             return true;
         }
