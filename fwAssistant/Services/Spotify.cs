@@ -38,7 +38,7 @@ namespace fwAssistant
 					AcessToken = sconfig[3];
 
 					UserPlayback r = GetUserPlayback();
-					Console.WriteLine(r.IsPlaying);
+					//Console.WriteLine(r.IsPlaying);
 					//SetVolume(100);
 				}
 				else
@@ -254,6 +254,35 @@ namespace fwAssistant
 					}
 
 					return playlists;
+				}
+			}
+		}
+
+		public static Playlist GetPlaylist(string plId)
+		{
+			again:
+			using (var httpClient = new HttpClient())
+			{
+				using (var request = new HttpRequestMessage(new HttpMethod("GET"), $"https://api.spotify.com/v1/playlists/{plId}"))
+				{
+					request.Headers.TryAddWithoutValidation("Accept", "application/json");
+					request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {AcessToken}");
+
+					var response = httpClient.SendAsync(request);
+					string result = response.Result.Content.ReadAsStringAsync().Result;
+					Playlist playlist = JsonConvert.DeserializeObject<Playlist>(result);
+					Error error = JsonConvert.DeserializeObject<Error>(result);
+
+					if (error != null && error.ErrorError != null)
+					{
+						if (error.ErrorError.Message == "The access token expired" || error.ErrorError.Message == "Invalid access token")
+						{
+							sRefreshToken();
+							goto again;
+						}
+					}
+
+					return playlist;
 				}
 			}
 		}

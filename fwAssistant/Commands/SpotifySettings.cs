@@ -1,4 +1,5 @@
 ﻿using fwAssistant.SpotifyApi;
+using Google.Apis.Util;
 using Swan;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace fwAssistant.Commands
 	{
 		public override void Run(string cmd, KeyValuePair<List<string>, Command> kvCmd)
 		{
+			UserPlayback userPlayback = Spotify.GetUserPlayback();
+
 			string command = ReplaceCmdPrefix(cmd, kvCmd.Key).ToLower();
 			string[] args = command.Split(" ");
 
@@ -21,12 +24,47 @@ namespace fwAssistant.Commands
 					Spotify.NextSong();
 					break;
 				case "poprzednia piosenka":
-					Spotify.PreviousSong();
+					var plss = Spotify.GetPlaylists().Items;
+					for(int i = 0; i < plss.Length; i++)
+					{
+						if(plss[i].Uri == userPlayback.context.Uri.Replace($"user:{plss[i].Owner.Id}:", ""))
+						{
+							Playlist playlist = Spotify.GetPlaylist(plss[i].Id);
+							for(int x = 0; x < playlist.tracks.Items.Length; x++)
+							{
+								if(userPlayback.item.Id == playlist.tracks.Items[x].Track.Id)
+								{
+									Spotify.ResumePlayerPlayback(ctxUri: userPlayback.context.Uri, offset: (x == 0 ? x : (x - 1)));
+									break;
+								}
+							}
+							break;
+						}
+					}
+					//Spotify.PreviousSong();
+					break;
+				case "zrestartuj piosenkę":
+					var plsss = Spotify.GetPlaylists().Items;
+					for (int i = 0; i < plsss.Length; i++)
+					{
+						if (plsss[i].Uri == userPlayback.context.Uri.Replace($"user:{plsss[i].Owner.Id}:", ""))
+						{
+							Playlist playlist = Spotify.GetPlaylist(plsss[i].Id);
+							for (int x = 0; x < playlist.tracks.Items.Length; x++)
+							{
+								if (userPlayback.item.Id == playlist.tracks.Items[x].Track.Id)
+								{
+									Spotify.ResumePlayerPlayback(ctxUri: userPlayback.context.Uri, offset: x);
+									break;
+								}
+							}
+							break;
+						}
+					}
 					break;
 				case "jaka to piosenka":
 				case "co to za piosenka":
 				case "co jest aktualnie grane":
-					UserPlayback userPlayback = Spotify.GetUserPlayback();
 					string retMessage = $"Aktualnie jest grane {userPlayback.item.Name} od {userPlayback.item.Artists[0].Name}!";
 					TTS(retMessage);
 					break;
@@ -68,7 +106,6 @@ namespace fwAssistant.Commands
 						{
 							if (pn >= 1 && pn <= pls.Length)
 							{
-								Console.WriteLine(pls[pn - 1].Uri);
 								Spotify.ResumePlayerPlayback(ctxUri: pls[pn - 1].Uri);
 							}
 						}
@@ -80,7 +117,6 @@ namespace fwAssistant.Commands
 							{
 								if (playlist.Name.ToLower() == pname)
 								{
-									Console.WriteLine(playlist.Uri);
 									Spotify.ResumePlayerPlayback(ctxUri: playlist.Uri);
 								}
 							}
