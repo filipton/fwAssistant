@@ -11,11 +11,11 @@ namespace fwAssistant.Commands
 		{
 			int dayIndex = 0;
 
-			if (cmd.ToLower().Contains(" jutro"))
+			if (cmd.ToLower().Contains(" jutro") || cmd.ToLower().Contains(" tomorrow"))
 			{
 				dayIndex = 1;
 			}
-			else if (cmd.ToLower().Contains(" pojutrze"))
+			else if (cmd.ToLower().Contains(" pojutrze") || cmd.ToLower().Contains(" day after tomorrow"))
 			{
 				dayIndex = 2;
 			}

@@ -34,11 +34,14 @@ namespace fwAssistant
         public static Dictionary<List<string>, Command> commands = new Dictionary<List<string>, Command>()
         {
             [GetArgs("dzień dobry", "good morning")] = new GoodMorning(),
-            [GetArgs("pogoda na")] = new Weather(),
-            [GetArgs("powiedz", "powtórz", "zjebany jesteś")] = new SudoSay(),
+            [GetArgs("pogoda na", "weather for")] = new Weather(),
+            [GetArgs("powiedz", "powtórz")] = new SudoSay(),
             [GetArgs("czy możesz coś powiedzieć", "czy możesz coś dla mnie powiedzieć", "możesz coś powiedzieć")] = new InteractiveSudoSay(),
             [GetArgs("jak jest teraz na zewnątrz", "jak jest na zewnątrz")] = new ActualWeather(),
-            [GetArgs("spotify")] = new SpotifySettings()
+            [GetArgs("spotify")] = new SpotifySettings(),
+            [GetArgs("włącz komputer", "wyłącz komputer")] = new ComputerManagment(),
+            [GetArgs("wykonaj")] = new SudoCommand(),
+            [GetArgs("testuj rutynę")] = new RoutineStarter()
         };
 
 
@@ -60,7 +63,7 @@ namespace fwAssistant
             if (string.IsNullOrEmpty(cmd))
                 return false;
 
-            Console.WriteLine($"==========================TREQUEST==========================");
+            Console.WriteLine($"==========================CREQUEST==========================");
             Console.WriteLine($"{cmd}");
             Console.WriteLine($"=======================END OF REQUEST=======================");
 			Console.WriteLine();

@@ -80,7 +80,7 @@ namespace fwAssistant
                         {
                             UserPlayback userPlayback = Spotify.GetUserPlayback();
 
-                            if (userPlayback.IsPlaying && userPlayback.device.Id == Spotify.SpeakersSpotifyConnectId)
+                            if (userPlayback != null && userPlayback.IsPlaying && userPlayback.device.Id == Spotify.SpeakersSpotifyConnectId)
                             {
                                 Program.MusicWasPlaying = true;
                                 Spotify.PausePlayerPlayback();
